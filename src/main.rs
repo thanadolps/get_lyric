@@ -48,7 +48,7 @@ async fn run(args: Args) -> Result<()> {
         .collect::<Vec<_>>()
         .join("\n");
 
-    println!("{}", output);
+    println!("{}", output.trim());
 
     Ok(())
 }
