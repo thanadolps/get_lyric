@@ -18,12 +18,20 @@ struct Args {
     output_html: bool,
 }
 
+#[maybe_async::async_impl]
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
     run(Args::parse()).await
 }
 
+#[maybe_async::sync_impl]
+fn main() -> Result<()> {
+    color_eyre::install()?;
+    run(Args::parse())
+}
+
+#[maybe_async::maybe_async]
 async fn run(args: Args) -> Result<()> {
     let html = if let Some(source_type) = args.source_type {
         source::read_source_as(&args.source, source_type).await
