@@ -25,7 +25,7 @@ pub async fn get_html(source: &str, source_type: Option<SourceType>) -> Result<S
 }
 
 pub fn from_html(html: &str) -> Result<String> {
-    let mut output = parse::parse(&scraper::Html::parse_document(html))?
+    let mut output = parse::parse_lyric(&scraper::Html::parse_document(html))?
         .map(|word| word.anki_format())
         .collect::<String>();
 

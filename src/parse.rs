@@ -1,4 +1,4 @@
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::{eyre, OptionExt, Result};
 use ego_tree::NodeRef;
 use scraper::{CaseSensitivity, ElementRef, Node, Selector};
 
@@ -31,10 +31,7 @@ impl Word {
                     .unwrap()
                     .inner_html();
 
-                return Some(Word::Kanji {
-                    word,
-                    furigana,
-                });
+                return Some(Word::Kanji { word, furigana });
             }
         }
         None
@@ -48,7 +45,8 @@ impl Word {
     }
 }
 
-pub fn parse(document: &scraper::Html) -> Result<impl Iterator<Item = Word> + '_> {
+/// Parse lyric from a lyric page
+pub(crate) fn parse_lyric(document: &scraper::Html) -> Result<impl Iterator<Item = Word> + '_> {
     let lyrics = document
         .select(&Selector::parse(".hiragana").unwrap())
         .next()
@@ -57,4 +55,25 @@ pub fn parse(document: &scraper::Html) -> Result<impl Iterator<Item = Word> + '_
     Ok(lyrics
         .children()
         .filter_map(|node| Word::try_from_noderef(node)))
+}
+
+/// Extract lyrics URL from a search result page
+pub(crate) fn extract_lyrics(document: &scraper::Html) -> Result<Vec<String>> {
+    let selector = Selector::parse(".searchResult__title a").unwrap();
+    let songs = document.select(&selector);
+
+    songs
+        .map(|song| {
+            let href = song
+                .value()
+                .attr("href")
+                .ok_or_else(|| eyre!("Song link has no href"))?;
+
+            if href.starts_with("http") {
+                Ok(href.to_string())
+            } else {
+                Ok(format!("https://utaten.com{}", href))
+            }
+        })
+        .collect()
 }
