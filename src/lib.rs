@@ -15,9 +15,9 @@ pub async fn get(source: &str, source_type: Option<SourceType>) -> Result<String
 #[maybe_async::maybe_async]
 pub async fn get_html(source: &str, source_type: Option<SourceType>) -> Result<String> {
     let html = if let Some(source_type) = source_type {
-        source::read_source_as(&source, source_type).await
+        source::read_source_as(source, source_type).await
     } else {
-        source::read_source(&source).await
+        source::read_source(source).await
     }
     .wrap_err_with(|| format!("cannot read from source `{}`", source))?;
 
@@ -25,7 +25,7 @@ pub async fn get_html(source: &str, source_type: Option<SourceType>) -> Result<S
 }
 
 pub fn from_html(html: &str) -> Result<String> {
-    let mut output = parse::parse(&scraper::Html::parse_document(&html))?
+    let mut output = parse::parse(&scraper::Html::parse_document(html))?
         .map(|word| word.anki_format())
         .collect::<String>();
 
