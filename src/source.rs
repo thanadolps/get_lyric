@@ -5,7 +5,8 @@ use color_eyre::{
     Section,
 };
 
-#[derive(Debug, Copy, Clone, clap::ValueEnum)]
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 pub enum SourceType {
     Html,
     Url,

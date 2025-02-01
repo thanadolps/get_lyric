@@ -1,8 +1,5 @@
-mod parse;
-mod source;
-
 use clap::Parser;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::Result;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -11,7 +8,7 @@ struct Args {
 
     /// Force the source type instead of auto-detecting from <SOURCE>
     #[clap(short, long)]
-    source_type: Option<source::SourceType>,
+    source_type: Option<get_lyric::SourceType>,
 
     /// Output the result as raw html
     #[clap(short, long)]
@@ -33,30 +30,13 @@ fn main() -> Result<()> {
 
 #[maybe_async::maybe_async]
 async fn run(args: Args) -> Result<()> {
-    let html = if let Some(source_type) = args.source_type {
-        source::read_source_as(&args.source, source_type).await
-    } else {
-        source::read_source(&args.source).await
-    }
-    .wrap_err_with(|| format!("cannot read from source `{}`", args.source))?;
-
     if args.output_html {
+        let html = get_lyric::get_html(&args.source, args.source_type).await?;
         println!("{}", html);
         return Ok(());
     }
 
-    let mut output = parse::parse(&scraper::Html::parse_document(&html))?
-        .map(|word| word.anki_format())
-        .collect::<String>();
-
-    // trim space (not newline) from each line
-    output = output
-        .lines()
-        .map(|line| line.trim_matches(' '))
-        .collect::<Vec<_>>()
-        .join("\n");
-
+    let output = get_lyric::get(&args.source, args.source_type).await?;
     println!("{}", output.trim());
-
     Ok(())
 }
